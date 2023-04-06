@@ -25,6 +25,7 @@ slug="$1"
 input_dir="${2%/}"
 output_dir="${3%/}"
 meta_config_json_file="${input_dir}/.meta/config.json"
+solution="${input_dir}/$(jq -r '.files.solution[0]' ${meta_config_json_file})"
 representation_file="${output_dir}/representation.txt"
 mapping_file="${output_dir}/mapping.json"
 
@@ -34,6 +35,8 @@ mkdir -p "${output_dir}"
 echo "${slug}: creating representation..."
 
 # TODO: build a representer to generate the representation and mapping files
+
+./bin/representer "${solution}" "${representation_file}" "${mapping_file}"
 
 # As we don't yet analyze the solution files, we'll just concatenate them with
 # leading and trailing empty lines removed
