@@ -25,7 +25,6 @@ slug="$1"
 input_dir="${2%/}"
 output_dir="${3%/}"
 meta_config_json_file="${input_dir}/.meta/config.json"
-solution="${input_dir}/$(jq -r '.files.solution[0]' ${meta_config_json_file})"
 representation_file="${output_dir}/representation.txt"
 mapping_file="${output_dir}/mapping.json"
 
@@ -36,44 +35,9 @@ echo "${slug}: creating representation..."
 
 # TODO: build a representer to generate the representation and mapping files
 
-./bin/representer "${solution}" "${representation_file}" "${mapping_file}"
+./bin/representer "${input_dir}" "${meta_config_json_file}" "${representation_file}" "${mapping_file}"
 
 # As we don't yet analyze the solution files, we'll just concatenate them with
 # leading and trailing empty lines removed
 
-# Start with an empty representation file
-echo -n '' > "${representation_file}" 
 
-solution_files=$(jq -r '.files.solution[]' "${meta_config_json_file}")
-i=0
-
-while read -r relative_solution_file; do
-    solution_file="${input_dir}/${relative_solution_file}"
-
-    ## Error when the solution file doesn't exist
-    if [[ ! -f "${solution_file}" ]]; then
-        >&2 echo "Could not find solution file '${relative_solution_file}'"
-        exit 1
-    fi
-
-    # Add an empty line to separate multiple files
-    if [[ $i > 0 ]]; then
-        echo '' >> "${representation_file}"
-    fi
-
-    # Append the contents of the solution file to the representation file
-    # with any blank lines removed
-    sed -E -e 's/\s*$//' -e '/^$/d' "${solution_file}" >> "${representation_file}"
-
-    i=$((i+1))
-done <<< "${solution_files}"
-
-# Exit if there an error occured while processing the solution files
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-
-# As we don't yet map any identifiers, we'll just output an empty JSON array
-echo '{}' > ${mapping_file}
-
-echo "${slug}: done"

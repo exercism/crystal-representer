@@ -1,9 +1,10 @@
 require "compiler/crystal/syntax"
 require "json"
 
-solution_file = ARGV[0]?
-representation_file = ARGV[1]?
-mapping_file = ARGV[2]?
+input_dir = ARGV[0]?
+config_file = ARGV[1]?
+representation_file = ARGV[2]?
+mapping_file = ARGV[3]?
 
 class TestVisitor < Crystal::Transformer
   @@counter = 1
@@ -478,34 +479,80 @@ end
 
 class TestVisitor_2 < Crystal::Visitor
   property counter
+  property methods
 
   def initialize
-    @counter = [] of Crystal::ASTNode | String
+    @counter = [] of String
+    @methods = Array(Array(Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil))).new
+    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
   end
 
   def visit(node : Crystal::ClassDef)
-    @counter << node.name
+    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
+    unless @counter.includes?(node.to_s)
+      @counter << node.name.to_s
+    end
     true
+  end
+
+  def end_visit(node : Crystal::ClassDef)
+    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
+  end
+
+  def visit(node : Crystal::CStructOrUnionDef)
+    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
+    unless @counter.includes?(node.to_s)
+      @counter << node.name.to_s
+    end
+    true
+  end
+
+  def end_visit(node : Crystal::CStructOrUnionDef)
+    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
   end
 
   def visit(node : Crystal::EnumDef)
-    @counter << node.name
+    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
+    unless @counter.includes?(node.to_s)
+      @counter << node.name.to_s
+    end
     true
+  end
+
+  def end_visit(node : Crystal::EnumDef)
+    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
   end
 
   def visit(node : Crystal::ModuleDef)
-    @counter << node.name
+    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
+    unless @counter.includes?(node.to_s)
+      @counter << node.name.to_s
+    end
     true
   end
 
+  def end_visit(node : Crystal::ModuleDef)
+    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
+  end
+
   def visit(node : Crystal::Def)
-    @counter << node.name
+    # p node.name
+    # p node.visibility
+    unless @counter.includes?(node.to_s)
+      @counter << node.name.to_s
+    end
+    @methods[-1] << {node.name, node.body, node.block_arg, node.args, node.receiver, node.visibility, node.return_type}
+    true
+  end
+
+  def visit(node : Crystal::VisibilityModifier)
+    node.exp.visibility = node.modifier
     true
   end
 
   def visit(node : Crystal::Var)
-    unless @counter.includes?(node)
-      @counter << node
+    unless @counter.includes?(node.name) || node.name == "self"
+      @counter << node.name
     end
     true
   end
@@ -515,19 +562,111 @@ class TestVisitor_2 < Crystal::Visitor
   end
 end
 
-test_file_content = File.read(solution_file)
-parser = Crystal::Parser.new(test_file_content)
-ast = parser.parse
-abc = TestVisitor_2.new
-abc.accept(ast)
-trans = ast.transform(TestVisitor.new(abc.counter.map { |node| node.to_s }))
+class Reformat < Crystal::Transformer
+  @data : Array(Array(Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)))
 
-json = Hash(String, String).new
+  def initialize(data)
+    @data = data.map { |x| x.sort { |a, b| a[0] <=> b[0] } }
+    # @data = Array(Array(Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil))).new
+    @counter = 0
+    @counter_2 = 0
+  end
 
-TestVisitor.data.each_with_index do |x, i|
-  json["PLACEHOLDER_#{i + 1}"] = x
+  def transform(node : Crystal::VisibilityModifier)
+    if @data[@counter_2][@counter][5] == Crystal::Visibility::Private || @data[@counter_2][@counter][5] == Crystal::Visibility::Protected
+      node.modifier = @data[@counter_2][@counter][5]
+      node.exp.transform self
+      node
+    else
+      data = Crystal::Def.new(@data[@counter_2][@counter][0], @data[@counter_2][@counter][3], @data[@counter_2][@counter][1], @data[@counter_2][@counter][4], @data[@counter_2][@counter][2], @data[@counter_2][@counter][6])
+      @counter += 1
+      data
+    end
+  end
+
+  def transform(node : Crystal::ClassDef)
+    @counter = 0
+    @counter_2 += 1
+    node.body = node.body.transform(self)
+    @counter = 0
+    @counter_2 += 1
+    node
+  end
+
+  def transform(node : Crystal::ModuleDef)
+    @counter = 0
+    @counter_2 += 1
+    node.body = node.body.transform(self)
+    @counter = 0
+    @counter_2 += 1
+    node
+  end
+
+  def transform(node : Crystal::EnumDef)
+    @counter = 0
+    @counter_2 += 1
+    node
+  end
+
+  def transform(node : Crystal::Def)
+    if @data[@counter_2][@counter][5] == Crystal::Visibility::Private || @data[@counter_2][@counter][5] == Crystal::Visibility::Protected
+      data = Crystal::VisibilityModifier.new(@data[@counter_2][@counter][5], Crystal::Def.new(@data[@counter_2][@counter][0], @data[@counter_2][@counter][3], @data[@counter_2][@counter][1], @data[@counter_2][@counter][4], @data[@counter_2][@counter][2], @data[@counter_2][@counter][6]))
+      @counter += 1
+      data
+    else
+      node.name = @data[@counter_2][@counter][0]
+      node.body = @data[@counter_2][@counter][1]
+      node.block_arg = @data[@counter_2][@counter][2]
+      node.args = @data[@counter_2][@counter][3]
+      node.receiver = @data[@counter_2][@counter][4]
+      node.visibility = @data[@counter_2][@counter][5]
+      node.return_type = @data[@counter_2][@counter][6]
+      @counter += 1
+      node
+    end
+  end
 end
-json = json.to_json
 
-File.write(representation_file, trans)
-File.write(json_file, json)
+unless config_file.nil?
+  names = [] of String
+  solution = ""
+  unless input_dir.nil?
+    solution_files = JSON.parse(File.read(config_file))["files"]["solution"].as_a
+    solution_files.each do |file|
+      "#{input_dir}/#{file}"
+      raise "Can't find #{input_dir}/#{file}" unless File.exists?("#{input_dir}/#{file}")
+      solution += File.read("#{input_dir}/#{file}")
+    end
+    begin
+    solution += "\n"
+    parser = Crystal::Parser.new(solution)
+    ast = parser.parse
+    abc = TestVisitor_2.new
+    abc.accept(ast)
+    ast = ast.transform(Reformat.new(abc.methods))
+    trans = ast.transform(TestVisitor.new(abc.counter))
+    rescue
+      p solution[0..-2]
+      trans = solution[0..-2]
+    end
+    json = Hash(String, String).new
+  
+    TestVisitor.data.each_with_index do |x, i|
+      json["PLACEHOLDER_#{i + 1}"] = x
+    end
+  end
+end
+
+json = json.to_json
+unless representation_file.nil?
+  puts "write representation_file"
+  File.write(representation_file, trans.to_s)
+else
+  puts "Can't find file"
+end
+unless mapping_file.nil?
+  puts "write json"
+  File.write(mapping_file, json.to_s)
+else
+  puts "Can't find file"
+end
