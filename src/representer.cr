@@ -46,7 +46,6 @@ class TestVisitor < Crystal::Transformer
       end
     else
       @@data << node.external_name
-      @@temp << [node.external_name, "PLACEHOLDER_#{@@counter}", "arg"]
       node.external_name = "PLACEHOLDER_#{@@counter}"
       @@counter += 1
     end
@@ -58,7 +57,6 @@ class TestVisitor < Crystal::Transformer
       end
     else
       @@data << node.name
-      @@temp << [node.name, "PLACEHOLDER_#{@@counter}", "arg"]
       node.name = "PLACEHOLDER_#{@@counter}"
       @@counter += 1
     end
@@ -95,7 +93,6 @@ class TestVisitor < Crystal::Transformer
       end
     else
       @@data << node.name
-      @@temp << [node.name, "@@PLACEHOLDER_#{@@counter}", "class_var"]
       node.name = "@@PLACEHOLDER_#{@@counter}"
       @@counter += 1
     end
@@ -110,7 +107,6 @@ class TestVisitor < Crystal::Transformer
       end
     else
       @@data << node.name[1..]
-      @@temp << [node.name[1..], "@PLACEHOLDER_#{@@counter}", "instance_var"]
       node.name = "@PLACEHOLDER_#{@@counter}"
       @@counter += 1
     end
@@ -140,7 +136,6 @@ class TestVisitor < Crystal::Transformer
       end
     else
       @@data << temp
-      @@temp << [temp, "PLACEHOLDER_#{@@counter}", "assign"]
       case node.target.to_s
       when /^@@/
         node.target = Crystal::Parser.new("@@PLACEHOLDER_#{@@counter}").parse
@@ -320,7 +315,6 @@ class TestVisitor < Crystal::Transformer
       end
     else
       @@data << node.name.to_s
-      @@temp << [node.name.to_s, "PLACEHOLDER_#{@@counter}", "alias"]
       node.name = Crystal::Path.new("PLACEHOLDER_#{@@counter}")
       @@counter += 1
     end
@@ -393,7 +387,6 @@ class TestVisitor < Crystal::Transformer
           end
         else
           @@data << input.to_s
-          @@temp << [input.to_s, "PLACEHOLDER_#{@@counter}", "proc"]
           input = Crystal::Parser.new("PLACEHOLDER_#{@@counter}").parse
           @@counter += 1
         end
@@ -408,7 +401,6 @@ class TestVisitor < Crystal::Transformer
         end
       else
         @@data << node.output.to_s
-        @@temp << [node.output.to_s, "PLACEHOLDER_#{@@counter}", "proc"]
         node.output = Crystal::Parser.new("PLACEHOLDER_#{@@counter}").parse
         @@counter += 1
       end
