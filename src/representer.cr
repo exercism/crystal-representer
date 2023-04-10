@@ -9,7 +9,6 @@ mapping_file = ARGV[3]?
 class TestVisitor < Crystal::Transformer
   @@counter = 1
   @@data = [] of String
-  @@temp = Array(Array(String)).new
 
   def initialize(data = [] of String)
     @@data += data
@@ -31,11 +30,6 @@ class TestVisitor < Crystal::Transformer
       unless location.nil?
         node.name = "PLACEHOLDER_#{location + 1}"
       end
-    else
-      @@data << node.name
-      @@temp << [node.name, "PLACEHOLDER_#{@@counter}", "def"]
-      node.name = "PLACEHOLDER_#{@@counter}"
-      @@counter += 1
     end
     node.args = node.args.map do |arg|
       arg.transform(TestVisitor.new)
@@ -89,11 +83,6 @@ class TestVisitor < Crystal::Transformer
       unless location.nil?
         node.name = "PLACEHOLDER_#{location + 1}"
       end
-    else
-      @@data << node.name
-      @@temp << [node.name, "PLACEHOLDER_#{@@counter}", "var"]
-      node.name = "PLACEHOLDER_#{@@counter}"
-      @@counter += 1
     end
     node
   end
@@ -172,11 +161,6 @@ class TestVisitor < Crystal::Transformer
       unless location.nil?
         node.name = Crystal::Path.new(["PLACEHOLDER_#{location + 1}"])
       end
-    else
-      @@data << node.name.to_s
-      @@temp << [node.name.to_s, "PLACEHOLDER_#{@@counter}", "module"]
-      node.name = Crystal::Path.new(["PLACEHOLDER_#{@@counter}"])
-      @@counter += 1
     end
     node.body = node.body.transform(TestVisitor.new)
     node
@@ -192,11 +176,6 @@ class TestVisitor < Crystal::Transformer
       unless location.nil?
         node.name = Crystal::Path.new(["PLACEHOLDER_#{location + 1}"])
       end
-    else
-      @@data << node.name.to_s
-      @@temp << [node.name.to_s, "PLACEHOLDER_#{@@counter}", "class"]
-      node.name = Crystal::Path.new(["PLACEHOLDER_#{@@counter}"])
-      @@counter += 1
     end
     node.body = node.body.transform(TestVisitor.new)
     node
@@ -208,11 +187,6 @@ class TestVisitor < Crystal::Transformer
       unless location.nil?
         node.name = Crystal::Path.new(["PLACEHOLDER_#{location + 1}"])
       end
-    else
-      @@data << node.name.to_s
-      @@temp << [node.name.to_s, "PLACEHOLDER_#{@@counter}", "enum"]
-      node.name = Crystal::Path.new(["PLACEHOLDER_#{@@counter}"])
-      @@counter += 1
     end
     node.members = node.members.map do |line|
       unless line.nil?
@@ -229,10 +203,8 @@ class TestVisitor < Crystal::Transformer
   end
 
   def transform(node : Crystal::Generic)
-    # p @@data
     data = [] of Crystal::ASTNode
     node.type_vars.each do |type_var|
-      # p type_var
       data << type_var.transform(TestVisitor.new)
     end
     node.type_vars = data
@@ -299,16 +271,12 @@ class TestVisitor < Crystal::Transformer
   def transform(node : Crystal::Call)
     temp = node.block
     unless temp.nil?
-      # p node.block
       node.block = temp.transform(TestVisitor.new)
-      # p node.block
     end
 
     temp = node.named_args
     unless temp.nil?
-      # p node.named_args
       node.named_args = temp.map { |arg| arg.transform(TestVisitor.new).as(Crystal::NamedArgument) }
-      # p node.named_args
     end
 
     unless node.args.empty?
@@ -334,21 +302,6 @@ class TestVisitor < Crystal::Transformer
       unless location.nil?
         node.name = "PLACEHOLDER_#{location + 1}"
       end
-    end
-    node
-  end
-
-  def transform(node : Crystal::Var)
-    if @@data.includes?(node.name)
-      location = @@data.index(node.name)
-      unless location.nil?
-        node.name = "PLACEHOLDER_#{location + 1}"
-      end
-    else
-      @@data << node.name
-      @@temp << [node.name, "PLACEHOLDER_#{@@counter}", "var"]
-      node.name = "PLACEHOLDER_#{@@counter}"
-      @@counter += 1
     end
     node
   end
@@ -638,19 +591,19 @@ unless config_file.nil?
       solution += File.read("#{input_dir}/#{file}")
     end
     begin
-    solution += "\n"
-    parser = Crystal::Parser.new(solution)
-    ast = parser.parse
-    abc = TestVisitor_2.new
-    abc.accept(ast)
-    ast = ast.transform(Reformat.new(abc.methods))
-    trans = ast.transform(TestVisitor.new(abc.counter))
+      solution += "\n"
+      parser = Crystal::Parser.new(solution)
+      ast = parser.parse
+      abc = TestVisitor_2.new
+      abc.accept(ast)
+      ast = ast.transform(Reformat.new(abc.methods))
+      trans = ast.transform(TestVisitor.new(abc.counter))
     rescue
       p solution[0..-2]
       trans = solution[0..-2]
     end
     json = Hash(String, String).new
-  
+
     TestVisitor.data.each_with_index do |x, i|
       json["PLACEHOLDER_#{i + 1}"] = x
     end
