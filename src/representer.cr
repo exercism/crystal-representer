@@ -85,14 +85,33 @@ class TestVisitor < Crystal::Transformer
     node
   end
 
-  def transform(node : Crystal::ClassVar)
+  def transform(node : Crystal::Macro)
+    temp = node.block_arg
+    unless temp.nil?
+      node.block_arg = temp.transform(TestVisitor.new)
+    end
+
     if @@data.includes?(node.name)
       location = @@data.index(node.name)
+      unless location.nil?
+        node.name = "PLACEHOLDER_#{location + 1}"
+      end
+    end
+    node.args = node.args.map do |arg|
+      arg.transform(TestVisitor.new)
+    end
+    node.body = node.body.transform(TestVisitor.new)
+    node
+  end
+
+  def transform(node : Crystal::ClassVar)
+    if @@data.includes?(node.name[2..])
+      location = @@data.index(node.name[2..])
       unless location.nil?
         node.name = "@@PLACEHOLDER_#{location + 1}"
       end
     else
-      @@data << node.name
+      @@data << node.name[2..]
       node.name = "@@PLACEHOLDER_#{@@counter}"
       @@counter += 1
     end
@@ -213,12 +232,16 @@ class TestVisitor < Crystal::Transformer
 
   def transform(node : Crystal::MacroFor)
     node.vars.map { |var| var.transform(TestVisitor.new).as(Crystal::ASTNode) }
-    node.body
+    temp = node.exp
+    unless temp.nil?
+      node.exp = temp.transform(TestVisitor.new)
+    end
+    node.body = node.body.transform(TestVisitor.new)
     node
   end
 
   def transform(node : Crystal::MacroLiteral)
-    if (node.value.includes?("case") || node.value.includes?("else")) && !node.value.includes?("end")
+    if (node.value.includes?("case") || node.value.includes?("else") || node.value.includes?("def") || node.value.includes?("if") || node.value.includes?("elsif") || node.value.includes?("unless") || node.value.includes?("when")) && !node.value.includes?("end")
       node.value = node.value.split("\n").map do |line|
         spaces_start = 0
         keywords_removed = ""
@@ -232,7 +255,8 @@ class TestVisitor < Crystal::Transformer
         if line.chars.all? { |char| char == ' ' }
           line
         else
-          temp = Crystal::Parser.new(line.gsub(/case |else|end|if |when |unless |elsif /) do |match|
+          p line
+          temp = Crystal::Parser.new(line.gsub(/case |else|end|if |when |unless |elsif |def /) do |match|
             keywords_removed = match
             ""
           end)
@@ -242,16 +266,44 @@ class TestVisitor < Crystal::Transformer
     elsif node.value =~ /^[ \n]*$/
       nil
     elsif node.value.strip != "end"
-      node = Crystal::Parser.new(node.value).parse.transform(TestVisitor.new)
+      node.value = node.value.split("\n").map do |line|
+        spaces_start = 0
+        keywords_removed_left = ""
+        keywords_removed_right = ""
+        line.each_char do |char|
+          if char == ' '
+            spaces_start += 1
+          else
+            break
+          end
+        end
+        if line.chars.all? { |char| char == ' ' }
+          line
+        else
+          line = line.strip
+          if line[-1] == '"' && line[-2] == '['
+            line = line[..-3]
+            keywords_removed_right = "[\""
+          elsif line[-1] == '"'
+            line = line[..-2]
+            keywords_removed_right = "\""
+          end
+          if line[0] == '"' && line[1] == ']'
+            line = line[2..]
+            keywords_removed_left = "\"]"
+          elsif line[0] == '"'
+            line = line[1..]
+            keywords_removed_left = "\""
+          end
+          "#{" " * spaces_start}#{keywords_removed_left}#{Crystal::Parser.new(line).parse.transform(TestVisitor.new)}#{keywords_removed_right}"
+        end
+      end.join("\n")
     end
     node
   end
 
   def transform(node : Crystal::MacroExpression)
-    node
-  end
-
-  def transform(node : Crystal::MacroVar)
+    p node.exp.transform self
     node
   end
 
@@ -301,11 +353,6 @@ class TestVisitor < Crystal::Transformer
     node
   end
 
-  def transform(node : Crystal::Asm)
-    p node
-    node
-  end
-
   def transform(node : Crystal::Alias)
     node.value = node.value.transform(TestVisitor.new)
     if @@data.includes?(node.name.to_s)
@@ -318,21 +365,6 @@ class TestVisitor < Crystal::Transformer
       node.name = Crystal::Path.new("PLACEHOLDER_#{@@counter}")
       @@counter += 1
     end
-    node
-  end
-
-  def transform(node : Crystal::TypeOf)
-    p node
-    node
-  end
-
-  def transform(node : Crystal::CStructOrUnionDef)
-    p node
-    node
-  end
-
-  def transform(node : Crystal::TypeDef)
-    p node
     node
   end
 
@@ -363,16 +395,6 @@ class TestVisitor < Crystal::Transformer
       end
     end
     node.declared_type
-    node
-  end
-
-  def transform(node : Crystal::PointerOf)
-    p node
-    node
-  end
-
-  def transform(node : Crystal::Asm)
-    p node
     node
   end
 
@@ -476,6 +498,18 @@ class TestVisitor_2 < Crystal::Visitor
     true
   end
 
+  def visit(node : Crystal::Macro)
+    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
+    unless @counter.includes?(node.to_s)
+      @counter << node.name.to_s
+    end
+    true
+  end
+
+  def end_visit(node : Crystal::Macro)
+    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
+  end
+
   def end_visit(node : Crystal::ModuleDef)
     @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
   end
@@ -538,6 +572,15 @@ class Reformat < Crystal::Transformer
     node
   end
 
+  def transform(node : Crystal::Macro)
+    @counter = 0
+    @counter_2 += 1
+    node.body = node.body.transform(self)
+    @counter = 0
+    @counter_2 += 1
+    node
+  end
+
   def transform(node : Crystal::ModuleDef)
     @counter = 0
     @counter_2 += 1
@@ -591,7 +634,6 @@ unless config_file.nil?
       ast = ast.transform(Reformat.new(abc.methods))
       trans = ast.transform(TestVisitor.new(abc.counter))
     rescue
-      p solution[0..-2]
       trans = solution[0..-2]
     end
     json = Hash(String, String).new
