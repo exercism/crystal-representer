@@ -5,6 +5,7 @@ input_dir = ARGV[0]?
 config_file = ARGV[1]?
 representation_file = ARGV[2]?
 mapping_file = ARGV[3]?
+representation_json = ARGV[4]?
 
 class TestVisitor < Crystal::Transformer
   @@counter = 1
@@ -649,11 +650,18 @@ unless representation_file.nil?
   puts "write representation_file"
   File.write(representation_file, trans.to_s)
 else
-  puts "Can't find file"
+  puts "Can't find representation_file"
 end
 unless mapping_file.nil?
   puts "write json"
   File.write(mapping_file, json.to_s)
 else
-  puts "Can't find file"
+  puts "Can't find mapping_file"
+end
+
+unless representation_json.nil?
+  puts "write"
+  File.write(representation_json, {"version" => 1}.to_json.to_s)
+else
+  puts "Can't find representation_json"
 end
