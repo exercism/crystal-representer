@@ -34,8 +34,6 @@ mkdir -p "${output_dir}"
 
 echo "${slug}: creating representation..."
 
-# TODO: build a representer to generate the representation and mapping files
-
 ./bin/representer "${input_dir}" "${meta_config_json_file}" "${representation_file}" "${mapping_file}" "${representation_config}"
 
 # As we don't yet analyze the solution files, we'll just concatenate them with

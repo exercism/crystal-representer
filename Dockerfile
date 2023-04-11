@@ -1,6 +1,6 @@
 FROM crystallang/crystal:nightly-alpine-build
 
-# install packages required to run the tests
+# install packages required to run the representer
 RUN apk add --no-cache bash jq coreutils
 
 WORKDIR /opt/representer
