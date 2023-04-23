@@ -630,10 +630,12 @@ unless config_file.nil?
       solution += "\n"
       parser = Crystal::Parser.new(solution)
       ast = parser.parse
-      abc = TestVisitor_2.new
-      abc.accept(ast)
-      ast = ast.transform(Reformat.new(abc.methods))
-      trans = ast.transform(TestVisitor.new(abc.counter))
+      visitor = TestVisitor_2.new
+      visitor.accept(ast)
+      ast = ast.transform(Reformat.new(visitor.methods))
+      visitor_2 = TestVisitor_2.new
+      visitor_2.accept(ast)
+      trans = ast.transform(TestVisitor.new(visitor_2.counter))
     rescue
       trans = solution[0..-2]
     end
