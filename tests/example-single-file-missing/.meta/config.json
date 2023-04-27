@@ -1,5 +1,5 @@
 {
   "files": {
-    "solution": ["Leap.fs"]
+    "solution": ["src/Leap.cr"]
   }
 }
