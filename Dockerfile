@@ -1,4 +1,4 @@
-FROM crystallang/crystal:nightly-alpine-build
+FROM crystallang/crystal:1.8.1-alpine
 
 # install packages required to run the representer
 RUN apk add --no-cache bash jq coreutils
