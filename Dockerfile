@@ -7,7 +7,7 @@ RUN apk add --no-cache bash coreutils
 
 RUN ./bin/build.sh
 
-From alpine:3.17
+FROM alpine:3.17
 
 RUN apk add --update --no-cache --force-overwrite pcre-dev pcre2-dev bash jq coreutils  
 WORKDIR /opt/representer
