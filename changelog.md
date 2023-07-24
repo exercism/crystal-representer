@@ -15,6 +15,7 @@
 - Reduced the size of the source files by using macros and more efficient code.
 - The representer will now output the error message if an error occurs.
 - Added so when `getter` and `property` are given a symbol as argument, so will they now be represented
+- Reduced the size of the representer image, from 500 mb to 30 mb.
 
 ## new features
 
