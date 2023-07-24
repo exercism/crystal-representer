@@ -522,7 +522,7 @@ unless config_file.nil?
       raise "Can't find #{input_dir}/#{file}" unless File.exists?("#{input_dir}/#{file}")
       solution += File.read("#{input_dir}/#{file}")
     end
-    #begin
+    begin
       solution += "\n"
       parser = Crystal::Parser.new(solution)
       ast = parser.parse
@@ -536,10 +536,10 @@ unless config_file.nil?
       {% else %}
         trans = ast.transform(TestVisitor.new(visitor_2.counter))
       {% end %}
-    #rescue ex
-      #puts ex.message
-      #trans = solution[0..-2]
-    #end
+    rescue ex
+      puts ex.message
+      trans = solution[0..-2]
+    end
     
     json = Hash(String, String).new
     TestVisitor.data.each_with_index do |x, i|
