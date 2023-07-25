@@ -6,12 +6,25 @@ config_file = ARGV[1]?
 representation_file = ARGV[2]?
 mapping_file = ARGV[3]?
 representation_json = ARGV[4]?
+{% if flag?(:Debug) %}
+debug_file = ARGV[5]?
+{% end %}
+
 
 class TestVisitor < Crystal::Transformer
   @@counter = 1
   @@data = [] of String
+  {% if flag?(:Debug) %}
+    @@debug = [] of Tuple(String, String)
+    def self.debug : Array(Tuple(String, String))
+      @@debug
+    end
+  {% end %}
 
-  def initialize(data = [] of String)
+  def initialize(data = [] of String, debug = [] of Tuple(String, String))
+    {% if flag?(:Debug) %}
+      @@debug += debug
+    {% end %}
     @@data += data
     @@counter += data.size
   end
@@ -26,12 +39,7 @@ class TestVisitor < Crystal::Transformer
       node.block_arg = temp.transform(TestVisitor.new)
     end
 
-    if @@data.includes?(node.name)
-      location = @@data.index(node.name)
-      unless location.nil?
-        node.name = "PLACEHOLDER_#{location + 1}"
-      end
-    end
+    node.name = re_name(node.name)
     node.args = node.args.map do |arg|
       arg.transform(TestVisitor.new)
     end
@@ -40,27 +48,8 @@ class TestVisitor < Crystal::Transformer
   end
 
   def transform(node : Crystal::Arg)
-    if @@data.includes?(node.external_name)
-      location = @@data.index(node.external_name)
-      unless location.nil?
-        node.external_name = "PLACEHOLDER_#{location + 1}"
-      end
-    else
-      @@data << node.external_name
-      node.external_name = "PLACEHOLDER_#{@@counter}"
-      @@counter += 1
-    end
-
-    if @@data.includes?(node.name)
-      location = @@data.index(node.name)
-      unless location.nil?
-        node.name = "PLACEHOLDER_#{location + 1}"
-      end
-    else
-      @@data << node.name
-      node.name = "PLACEHOLDER_#{@@counter}"
-      @@counter += 1
-    end
+    node.external_name = re_name_or_add(node.external_name, node)
+    node.name = re_name_or_add(node.name, node)
     if @@data.includes?(node.restriction.to_s)
       location = @@data.index(node.restriction.to_s)
       unless location.nil?
@@ -77,12 +66,7 @@ class TestVisitor < Crystal::Transformer
   end
 
   def transform(node : Crystal::Var)
-    if @@data.includes?(node.name)
-      location = @@data.index(node.name)
-      unless location.nil?
-        node.name = "PLACEHOLDER_#{location + 1}"
-      end
-    end
+    node.name = re_name(node.name)
     node
   end
 
@@ -92,12 +76,7 @@ class TestVisitor < Crystal::Transformer
       node.block_arg = temp.transform(TestVisitor.new)
     end
 
-    if @@data.includes?(node.name)
-      location = @@data.index(node.name)
-      unless location.nil?
-        node.name = "PLACEHOLDER_#{location + 1}"
-      end
-    end
+    node.name = re_name(node.name)
     node.args = node.args.map do |arg|
       arg.transform(TestVisitor.new)
     end
@@ -106,77 +85,24 @@ class TestVisitor < Crystal::Transformer
   end
 
   def transform(node : Crystal::ClassVar)
-    if @@data.includes?(node.name[2..])
-      location = @@data.index(node.name[2..])
-      unless location.nil?
-        node.name = "@@PLACEHOLDER_#{location + 1}"
-      end
-    else
-      @@data << node.name[2..]
-      node.name = "@@PLACEHOLDER_#{@@counter}"
-      @@counter += 1
-    end
+    node.name = re_name_or_add(node.name[2..], node, 2)
     node
   end
 
   def transform(node : Crystal::InstanceVar)
-    if @@data.includes?(node.name[1..])
-      location = @@data.index(node.name[1..])
-      unless location.nil?
-        node.name = "@PLACEHOLDER_#{location + 1}"
-      end
-    else
-      @@data << node.name[1..]
-      node.name = "@PLACEHOLDER_#{@@counter}"
-      @@counter += 1
-    end
+    node.name = re_name_or_add(node.name[1..], node, 1)
     node
   end
 
   def transform(node : Crystal::Assign)
-    case node.target.to_s
-    when /^@@/
-      temp = node.target.to_s[2..]
-    when /^@/
-      temp = node.target.to_s[1..]
-    else
-      temp = node.target.to_s
-    end
-    if @@data.includes?(temp)
-      location = @@data.index(temp)
-      unless location.nil?
-        case node.target.to_s
-        when /^@@/
-          node.target = Crystal::Parser.new("@@PLACEHOLDER_#{location + 1}").parse
-        when /^@/
-          node.target = Crystal::Parser.new("@PLACEHOLDER_#{location + 1}").parse
-        else
-          node.target = Crystal::Parser.new("PLACEHOLDER_#{location + 1}").parse
-        end
-      end
-    else
-      @@data << temp
-      case node.target.to_s
-      when /^@@/
-        node.target = Crystal::Parser.new("@@PLACEHOLDER_#{@@counter}").parse
-      when /^@/
-        node.target = Crystal::Parser.new("@PLACEHOLDER_#{@@counter}").parse
-      else
-        node.target = Crystal::Parser.new("PLACEHOLDER_#{@@counter}").parse
-      end
-      @@counter += 1
-    end
+    a_count = node.target.to_s.chars.take_while { |c| c == '@' }.size
+    node.target = Crystal::Parser.new(re_name_or_add(node.target.to_s[a_count..], node, a_count)).parse
     node.value = node.value.transform(TestVisitor.new)
     node
   end
 
   def transform(node : Crystal::ModuleDef)
-    if @@data.includes?(node.name.to_s)
-      location = @@data.index(node.name.to_s)
-      unless location.nil?
-        node.name = Crystal::Path.new(["PLACEHOLDER_#{location + 1}"])
-      end
-    end
+    node.name = re_path(node.name)
     node.body = node.body.transform(TestVisitor.new)
     node
   end
@@ -186,23 +112,13 @@ class TestVisitor < Crystal::Transformer
     unless temp.nil?
       node.superclass = temp.transform(TestVisitor.new)
     end
-    if @@data.includes?(node.name.to_s)
-      location = @@data.index(node.name.to_s)
-      unless location.nil?
-        node.name = Crystal::Path.new(["PLACEHOLDER_#{location + 1}"])
-      end
-    end
+    node.name = re_path(node.name)
     node.body = node.body.transform(TestVisitor.new)
     node
   end
 
   def transform(node : Crystal::EnumDef)
-    if @@data.includes?(node.name.to_s)
-      location = @@data.index(node.name.to_s)
-      unless location.nil?
-        node.name = Crystal::Path.new(["PLACEHOLDER_#{location + 1}"])
-      end
-    end
+    node.name = re_path(node.name)
     node.members = node.members.map do |line|
       unless line.nil?
         if line.to_s.includes?("def")
@@ -256,7 +172,6 @@ class TestVisitor < Crystal::Transformer
         if line.chars.all? { |char| char == ' ' }
           line
         else
-          p line
           temp = Crystal::Parser.new(line.gsub(/case |else|end|if |when |unless |elsif |def /) do |match|
             keywords_removed = match
             ""
@@ -329,7 +244,13 @@ class TestVisitor < Crystal::Transformer
 
     unless node.args.empty?
       node.args = node.args.map do |arg|
-        arg.transform(TestVisitor.new).as(Crystal::ASTNode)
+        result : Crystal::ASTNode = Crystal::Parser.new("").parse
+        if {"getter", "setter", "property"}.includes?(node.name) && arg.is_a?(Crystal::SymbolLiteral)
+          result = Crystal::Parser.new(":#{Crystal::Parser.new(arg.to_s[1..]).parse.transform(TestVisitor.new)}").parse
+        else
+          result = arg.transform(TestVisitor.new).as(Crystal::ASTNode)
+        end
+        result
       end
     end
     temp = node.obj
@@ -345,39 +266,19 @@ class TestVisitor < Crystal::Transformer
         end
       end
     end
-    if @@data.includes?(node.name)
-      location = @@data.index(node.name)
-      unless location.nil?
-        node.name = "PLACEHOLDER_#{location + 1}"
-      end
-    end
+    node.name = re_name(node.name)
     node
   end
 
   def transform(node : Crystal::Alias)
     node.value = node.value.transform(TestVisitor.new)
-    if @@data.includes?(node.name.to_s)
-      location = @@data.index(node.name.to_s)
-      unless location.nil?
-        node.name = Crystal::Path.new("PLACEHOLDER_#{location + 1}")
-      end
-    else
-      @@data << node.name.to_s
-      node.name = Crystal::Path.new("PLACEHOLDER_#{@@counter}")
-      @@counter += 1
-    end
+    node.name = re_path_or_add(node.name, node)
     node
   end
 
   def transform(node : Crystal::Union)
     node.types = node.types.map do |type|
-      if @@data.includes?(type.to_s)
-        location = @@data.index(type.to_s)
-        unless location.nil?
-          type = Crystal::Path.new("PLACEHOLDER_#{location + 1}")
-        end
-      end
-      type.as(Crystal::ASTNode)
+      re_path(type.as(Crystal::Path)).as(Crystal::ASTNode)
     end
     node
   end
@@ -395,7 +296,6 @@ class TestVisitor < Crystal::Transformer
         node.declared_type = temp.transform(TestVisitor.new)
       end
     end
-    node.declared_type
     node
   end
 
@@ -403,193 +303,184 @@ class TestVisitor < Crystal::Transformer
     temp = node.inputs
     unless temp.nil?
       node.inputs = temp.map do |input|
-        if @@data.includes?(input.to_s)
-          location = @@data.index(input.to_s)
-          unless location.nil?
-            input = Crystal::Parser.new("PLACEHOLDER_#{location + 1}").parse
-          end
-        else
-          @@data << input.to_s
-          input = Crystal::Parser.new("PLACEHOLDER_#{@@counter}").parse
-          @@counter += 1
-        end
+        input = Crystal::Parser.new(re_name(input.to_s)).parse
         input.as(Crystal::ASTNode)
       end
     end
     unless node.output.nil?
-      if @@data.includes?(node.output.to_s)
-        location = @@data.index(node.output.to_s)
-        unless location.nil?
-          node.output = Crystal::Parser.new("PLACEHOLDER_#{location + 1}").parse
-        end
-      else
-        @@data << node.output.to_s
-        node.output = Crystal::Parser.new("PLACEHOLDER_#{@@counter}").parse
-        @@counter += 1
-      end
+      node.output = Crystal::Parser.new(re_name(node.output.to_s)).parse
     end
     node
   end
 
   def transform(node : Crystal::Path)
     node.names = node.names.map do |name|
-      if @@data.includes?(name)
-        location = @@data.index(name)
-        unless location.nil?
-          name = "PLACEHOLDER_#{location + 1}"
-        end
-      end
-      name
+      re_name(name)
     end
     node
+  end
+
+  private def re_name(name : String) : String
+    if @@data.includes?(name)
+      location = @@data.index(name)
+      unless location.nil?
+        name = "PLACEHOLDER_#{location + 1}"
+      end
+    end
+    name
+  end
+
+  private def re_name_or_add(name : String, called_from : Crystal::ASTNode, a_count = 0) : String
+    if @@data.includes?(name)
+      location = @@data.index(name)
+      unless location.nil?
+        name = "#{"@" * a_count}PLACEHOLDER_#{location + 1}"
+      end
+    else
+      {% if flag?(:Debug) %}
+      @@debug << {name, called_from.class.to_s}
+      {% end %}
+      @@data << name
+      name = "#{"@" * a_count}PLACEHOLDER_#{@@counter}"
+      @@counter += 1
+    end
+    name
+  end
+
+  private def re_path(name : Crystal::Path) : Crystal::Path
+    if @@data.includes?(name.to_s)
+      location = @@data.index(name.to_s)
+      unless location.nil?
+        name = Crystal::Path.new(["PLACEHOLDER_#{location + 1}"])
+      end
+    end
+    name
+  end
+
+  private def re_path_or_add(name : Crystal::Path, called_from : Crystal::ASTNode ) : Crystal::Path
+    if @@data.includes?(name.to_s)
+      location = @@data.index(name.to_s)
+      unless location.nil?
+        name = Crystal::Path.new("PLACEHOLDER_#{location + 1}")
+      end
+    else
+      {% if flag?(:Debug) %}
+      @@debug << {name.to_s, called_from.class.to_s}
+      {% end %}
+      @@data << name.to_s
+      name = Crystal::Path.new("PLACEHOLDER_#{@@counter}")
+      @@counter += 1
+    end
+    name
   end
 end
 
 class TestVisitor_2 < Crystal::Visitor
+  alias Def = Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil, Int32?, Bool)
+
   property counter
   property methods
 
+  {% if flag?(:Debug) %}
+  property debug
+
+  @debug : Array(Tuple(String, String)) = Array(Tuple(String, String)).new
+  {% end %}
+
+  ExpectedNames = ["self", "->"]
+
   def initialize
     @counter = [] of String
-    @methods = Array(Array(Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil))).new
-    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
+    @methods = Array(Array(Def)).new
+    @methods << [] of Def
+    @insde_method = 0
   end
 
-  def visit(node : Crystal::ClassDef)
-    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
-    unless @counter.includes?(node.to_s)
-      @counter << node.name.to_s
+  {% for name in %w(ClassDef Macro ModuleDef CStructOrUnionDef EnumDef) %}
+    def visit(node : Crystal::{{name.id}})
+      @methods << [] of Def
+      add_name(node)
+      true
     end
-    true
-  end
 
-  def end_visit(node : Crystal::ClassDef)
-    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
-  end
-
-  def visit(node : Crystal::CStructOrUnionDef)
-    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
-    unless @counter.includes?(node.to_s)
-      @counter << node.name.to_s
+    def end_visit(node : Crystal::{{name.id}})
+      @methods << [] of Def
     end
-    true
-  end
-
-  def end_visit(node : Crystal::CStructOrUnionDef)
-    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
-  end
-
-  def visit(node : Crystal::EnumDef)
-    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
-    unless @counter.includes?(node.to_s)
-      @counter << node.name.to_s
-    end
-    true
-  end
-
-  def end_visit(node : Crystal::EnumDef)
-    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
-  end
-
-  def visit(node : Crystal::ModuleDef)
-    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
-    unless @counter.includes?(node.to_s)
-      @counter << node.name.to_s
-    end
-    true
-  end
-
-  def visit(node : Crystal::Macro)
-    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
-    unless @counter.includes?(node.to_s)
-      @counter << node.name.to_s
-    end
-    true
-  end
-
-  def end_visit(node : Crystal::Macro)
-    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
-  end
-
-  def end_visit(node : Crystal::ModuleDef)
-    @methods << [] of Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)
-  end
+  {% end %}
 
   def visit(node : Crystal::Def)
-    # p node.name
-    # p node.visibility
-    unless @counter.includes?(node.to_s)
-      @counter << node.name.to_s
+    add_name(node)
+    if @insde_method == 0
+      @methods[-1] << {node.name, node.body, node.block_arg, node.args, node.receiver, node.visibility, node.return_type, node.block_arity, node.calls_initialize?}
     end
-    @methods[-1] << {node.name, node.body, node.block_arg, node.args, node.receiver, node.visibility, node.return_type}
+    @insde_method += 1
+    true
+  end
+
+  def end_visit(node : Crystal::Def)
+    @insde_method -= 1
     true
   end
 
   def visit(node : Crystal::VisibilityModifier)
-    node.exp.visibility = node.modifier
+    if node.exp.is_a?(Crystal::Def)
+      node.exp.visibility = node.modifier
+    end
     true
   end
 
   def visit(node : Crystal::Var)
-    unless @counter.includes?(node.name) || node.name == "self"
-      @counter << node.name
-    end
+    add_name(node)
     true
   end
 
   def visit(node)
     true
   end
+
+  private def add_name(node : Crystal::ASTNode)
+    unless @counter.includes?(node.name.to_s) || ExpectedNames.includes?(node.name.to_s)
+      {% if flag?(:Debug) %}
+        @debug << {node.name.to_s, node.class.to_s}
+      {% end %}
+        @counter << node.name.to_s
+    end
+  end
 end
 
 class Reformat < Crystal::Transformer
-  @data : Array(Array(Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil)))
+  alias Def = Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil, Int32?, Bool)
+  @data : Array(Array(Def))
 
   def initialize(data)
     @data = data.map { |x| x.sort { |a, b| a[0] <=> b[0] } }
-    # @data = Array(Array(Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil))).new
     @counter = 0
     @counter_2 = 0
   end
 
   def transform(node : Crystal::VisibilityModifier)
+    return node unless node.exp.is_a?(Crystal::Def)
     if @data[@counter_2][@counter][5] == Crystal::Visibility::Private || @data[@counter_2][@counter][5] == Crystal::Visibility::Protected
       node.modifier = @data[@counter_2][@counter][5]
       node.exp.transform self
       node
     else
-      data = Crystal::Def.new(@data[@counter_2][@counter][0], @data[@counter_2][@counter][3], @data[@counter_2][@counter][1], @data[@counter_2][@counter][4], @data[@counter_2][@counter][2], @data[@counter_2][@counter][6])
+      data = Crystal::Def.new(@data[@counter_2][@counter][0], @data[@counter_2][@counter][3], @data[@counter_2][@counter][1], @data[@counter_2][@counter][4], @data[@counter_2][@counter][2], @data[@counter_2][@counter][6], false, @data[@counter_2][@counter][7])
       @counter += 1
       data
     end
   end
 
-  def transform(node : Crystal::ClassDef)
-    @counter = 0
-    @counter_2 += 1
-    node.body = node.body.transform(self)
-    @counter = 0
-    @counter_2 += 1
-    node
-  end
-
-  def transform(node : Crystal::Macro)
-    @counter = 0
-    @counter_2 += 1
-    node.body = node.body.transform(self)
-    @counter = 0
-    @counter_2 += 1
-    node
-  end
-
-  def transform(node : Crystal::ModuleDef)
-    @counter = 0
-    @counter_2 += 1
-    node.body = node.body.transform(self)
-    @counter = 0
-    @counter_2 += 1
-    node
-  end
+  {% for name in %w(ClassDef Macro ModuleDef) %}
+    def transform(node : Crystal::{{name.id}})
+      @counter = 0
+      @counter_2 += 1
+      node.body = node.body.transform(self)
+      @counter = 0
+      @counter_2 += 1
+      node
+    end
+  {% end %}
 
   def transform(node : Crystal::EnumDef)
     @counter = 0
@@ -599,7 +490,9 @@ class Reformat < Crystal::Transformer
 
   def transform(node : Crystal::Def)
     if @data[@counter_2][@counter][5] == Crystal::Visibility::Private || @data[@counter_2][@counter][5] == Crystal::Visibility::Protected
-      data = Crystal::VisibilityModifier.new(@data[@counter_2][@counter][5], Crystal::Def.new(@data[@counter_2][@counter][0], @data[@counter_2][@counter][3], @data[@counter_2][@counter][1], @data[@counter_2][@counter][4], @data[@counter_2][@counter][2], @data[@counter_2][@counter][6]))
+      new_def = Crystal::Def.new(@data[@counter_2][@counter][0], @data[@counter_2][@counter][3], @data[@counter_2][@counter][1], @data[@counter_2][@counter][4], @data[@counter_2][@counter][2], @data[@counter_2][@counter][6], false, @data[@counter_2][@counter][7])
+      new_def.calls_initialize = @data[@counter_2][@counter][8]
+      data = Crystal::VisibilityModifier.new(@data[@counter_2][@counter][5], new_def)
       @counter += 1
       data
     else
@@ -610,6 +503,8 @@ class Reformat < Crystal::Transformer
       node.receiver = @data[@counter_2][@counter][4]
       node.visibility = @data[@counter_2][@counter][5]
       node.return_type = @data[@counter_2][@counter][6]
+      node.block_arity = @data[@counter_2][@counter][7]
+      node.calls_initialize = @data[@counter_2][@counter][8]
       @counter += 1
       node
     end
@@ -618,6 +513,7 @@ end
 
 unless config_file.nil?
   names = [] of String
+  trans = ""
   solution = ""
   unless input_dir.nil?
     solution_files = JSON.parse(File.read(config_file))["files"]["solution"].as_a
@@ -635,12 +531,17 @@ unless config_file.nil?
       ast = ast.transform(Reformat.new(visitor.methods))
       visitor_2 = TestVisitor_2.new
       visitor_2.accept(ast)
-      trans = ast.transform(TestVisitor.new(visitor_2.counter))
-    rescue
+      {% if flag?(:Debug) %}
+        trans = ast.transform(TestVisitor.new(visitor_2.counter, visitor_2.debug))
+      {% else %}
+        trans = ast.transform(TestVisitor.new(visitor_2.counter))
+      {% end %}
+    rescue ex
+      puts ex.message
       trans = solution[0..-2]
     end
+    
     json = Hash(String, String).new
-
     TestVisitor.data.each_with_index do |x, i|
       json["PLACEHOLDER_#{i + 1}"] = x
     end
@@ -667,3 +568,16 @@ unless representation_json.nil?
 else
   puts "Can't find representation_json"
 end
+
+{% if flag?(:Debug) %}
+  unless debug_file.nil?
+    puts "write debug_file"
+    json2 = Hash(String, Tuple(String, String)).new
+    TestVisitor.debug.each_with_index do |x, i|
+      json2["PLACEHOLDER_#{i + 1}"] = x
+    end
+    File.write(debug_file, json2.to_json.to_s)
+  else
+    puts "Can't find debug_file"
+  end
+{% end %}
