@@ -16,7 +16,7 @@ jobs:
       image: crystallang/crystal
     steps:
       - name: Build docs
-        run: crystal docs
+        run: crystal docs --project-name Representer --project-version 1.2.0-Dev
       - name: Deploy docs
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: JamesIves/github-pages-deploy-action@v4
