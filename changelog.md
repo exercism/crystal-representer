@@ -1,3 +1,16 @@
+# 1.2.0
+
+## Improvements
+
+- Improved documentation for the representer.
+
+## new features
+
+- Add a complete cli interface, which allows for more control over the representer.
+- Add API for the representer, which allows the representer to be used as a library.
+- Add Support for Crystal 1.10
+- Added github documentation for the representer.
+
 # 1.1.0
 
 ## Bug fixes

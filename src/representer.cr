@@ -1,36 +1,23 @@
 require "compiler/crystal/syntax"
-require "json"
 
-input_dir = ARGV[0]?
-config_file = ARGV[1]?
-representation_file = ARGV[2]?
-mapping_file = ARGV[3]?
-representation_json = ARGV[4]?
-{% if flag?(:Debug) %}
-debug_file = ARGV[5]?
-{% end %}
-
-
+# :nodoc:
 class TestVisitor < Crystal::Transformer
   @@counter = 1
   @@data = [] of String
-  {% if flag?(:Debug) %}
-    @@debug = [] of Tuple(String, String)
-    def self.debug : Array(Tuple(String, String))
-      @@debug
-    end
-  {% end %}
+  @@debug = [] of Tuple(String, String)
 
-  def initialize(data = [] of String, debug = [] of Tuple(String, String))
-    {% if flag?(:Debug) %}
-      @@debug += debug
-    {% end %}
-    @@data += data
-    @@counter += data.size
+  def self.debug : Array(Tuple(String, String))
+    @@debug
   end
 
   def self.data : Array(String)
     @@data
+  end
+
+  def initialize(data = [] of String, debug = [] of Tuple(String, String))
+    @@debug += debug
+    @@data += data
+    @@counter += data.size
   end
 
   def transform(node : Crystal::Def)
@@ -337,9 +324,7 @@ class TestVisitor < Crystal::Transformer
         name = "#{"@" * a_count}PLACEHOLDER_#{location + 1}"
       end
     else
-      {% if flag?(:Debug) %}
       @@debug << {name, called_from.class.to_s}
-      {% end %}
       @@data << name
       name = "#{"@" * a_count}PLACEHOLDER_#{@@counter}"
       @@counter += 1
@@ -357,16 +342,14 @@ class TestVisitor < Crystal::Transformer
     name
   end
 
-  private def re_path_or_add(name : Crystal::Path, called_from : Crystal::ASTNode ) : Crystal::Path
+  private def re_path_or_add(name : Crystal::Path, called_from : Crystal::ASTNode) : Crystal::Path
     if @@data.includes?(name.to_s)
       location = @@data.index(name.to_s)
       unless location.nil?
         name = Crystal::Path.new("PLACEHOLDER_#{location + 1}")
       end
     else
-      {% if flag?(:Debug) %}
       @@debug << {name.to_s, called_from.class.to_s}
-      {% end %}
       @@data << name.to_s
       name = Crystal::Path.new("PLACEHOLDER_#{@@counter}")
       @@counter += 1
@@ -375,17 +358,13 @@ class TestVisitor < Crystal::Transformer
   end
 end
 
+# :nodoc:
 class TestVisitor_2 < Crystal::Visitor
   alias Def = Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil, Int32?, Bool)
 
-  property counter
-  property methods
-
-  {% if flag?(:Debug) %}
-  property debug
+  property counter, methods, debug
 
   @debug : Array(Tuple(String, String)) = Array(Tuple(String, String)).new
-  {% end %}
 
   ExpectedNames = ["self", "->"]
 
@@ -440,14 +419,13 @@ class TestVisitor_2 < Crystal::Visitor
 
   private def add_name(node : Crystal::ASTNode)
     unless @counter.includes?(node.name.to_s) || ExpectedNames.includes?(node.name.to_s)
-      {% if flag?(:Debug) %}
-        @debug << {node.name.to_s, node.class.to_s}
-      {% end %}
-        @counter << node.name.to_s
+      @debug << {node.name.to_s, node.class.to_s}
+      @counter << node.name.to_s
     end
   end
 end
 
+# :nodoc:
 class Reformat < Crystal::Transformer
   alias Def = Tuple(String, Crystal::ASTNode, Crystal::Arg | Nil, Array(Crystal::Arg), Crystal::ASTNode | Nil, Crystal::Visibility, Crystal::ASTNode | Nil, Int32?, Bool)
   @data : Array(Array(Def))
@@ -510,74 +488,3 @@ class Reformat < Crystal::Transformer
     end
   end
 end
-
-unless config_file.nil?
-  names = [] of String
-  trans = ""
-  solution = ""
-  unless input_dir.nil?
-    solution_files = JSON.parse(File.read(config_file))["files"]["solution"].as_a
-    solution_files.each do |file|
-      "#{input_dir}/#{file}"
-      raise "Can't find #{input_dir}/#{file}" unless File.exists?("#{input_dir}/#{file}")
-      solution += File.read("#{input_dir}/#{file}")
-    end
-    begin
-      solution += "\n"
-      parser = Crystal::Parser.new(solution)
-      ast = parser.parse
-      visitor = TestVisitor_2.new
-      visitor.accept(ast)
-      ast = ast.transform(Reformat.new(visitor.methods))
-      visitor_2 = TestVisitor_2.new
-      visitor_2.accept(ast)
-      {% if flag?(:Debug) %}
-        trans = ast.transform(TestVisitor.new(visitor_2.counter, visitor_2.debug))
-      {% else %}
-        trans = ast.transform(TestVisitor.new(visitor_2.counter))
-      {% end %}
-    rescue ex
-      puts ex.message
-      trans = solution[0..-2]
-    end
-    
-    json = Hash(String, String).new
-    TestVisitor.data.each_with_index do |x, i|
-      json["PLACEHOLDER_#{i + 1}"] = x
-    end
-  end
-end
-
-json = json.to_json
-unless representation_file.nil?
-  puts "write representation_file"
-  File.write(representation_file, trans.to_s)
-else
-  puts "Can't find representation_file"
-end
-unless mapping_file.nil?
-  puts "write json"
-  File.write(mapping_file, json.to_s)
-else
-  puts "Can't find mapping_file"
-end
-
-unless representation_json.nil?
-  puts "write"
-  File.write(representation_json, {"version" => 1}.to_json.to_s)
-else
-  puts "Can't find representation_json"
-end
-
-{% if flag?(:Debug) %}
-  unless debug_file.nil?
-    puts "write debug_file"
-    json2 = Hash(String, Tuple(String, String)).new
-    TestVisitor.debug.each_with_index do |x, i|
-      json2["PLACEHOLDER_#{i + 1}"] = x
-    end
-    File.write(debug_file, json2.to_json.to_s)
-  else
-    puts "Can't find debug_file"
-  end
-{% end %}

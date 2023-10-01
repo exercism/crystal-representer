@@ -3,4 +3,4 @@
 set -euo pipefail
 
 echo "Building representator"
-crystal build src/representer.cr --release -o bin/representer
+crystal build src/cli.cr --release -o bin/representer

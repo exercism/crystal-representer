@@ -1,2 +1,4 @@
 tests/*/representation.txt
 tests/*/mapping.json
+tests/*/representation.json
+tests/*/debug.json

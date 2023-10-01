@@ -1,0 +1,12 @@
+jobs:
+  deploy:
+    name: Docs
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Build docs
+        run: crystal docs
+      - name: Deploy docs
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: docs # The folder the action should deploy.
