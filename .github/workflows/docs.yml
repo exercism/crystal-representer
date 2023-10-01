@@ -15,6 +15,7 @@ jobs:
     container:
       image: crystallang/crystal
     steps:
+      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
       - name: Build docs
         run: crystal docs --project-name Representer --project-version 1.2.0-Dev
       - name: Deploy docs
