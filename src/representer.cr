@@ -4,10 +4,19 @@ require "compiler/crystal/syntax"
 class TestVisitor < Crystal::Transformer
   @@counter = 1
   @@data = [] of String
+
   @@debug = [] of Tuple(String, String)
 
   def self.debug : Array(Tuple(String, String))
     @@debug
+  end
+
+  def initialize(data = [] of String, debug = [] of Tuple(String, String))
+    {% if flag?(:Debug) %}
+      @@debug += debug
+    {% end %}
+    @@data += data
+    @@counter += data.size
   end
 
   def self.data : Array(String)
