@@ -11,14 +11,6 @@ class TestVisitor < Crystal::Transformer
     @@debug
   end
 
-  def initialize(data = [] of String, debug = [] of Tuple(String, String))
-    {% if flag?(:Debug) %}
-      @@debug += debug
-    {% end %}
-    @@data += data
-    @@counter += data.size
-  end
-
   def self.data : Array(String)
     @@data
   end

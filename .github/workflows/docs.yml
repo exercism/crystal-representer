@@ -12,6 +12,8 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-22.04
+    container:
+      image: crystallang/crystal
     steps:
       - name: Build docs
         run: crystal docs
