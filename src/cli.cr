@@ -1,5 +1,5 @@
 require "option_parser"
-require "./bindings"
+require "./api"
 
 options = Hash(Symbol, (String | Bool | Path | Nil)){
   :output       => nil,
