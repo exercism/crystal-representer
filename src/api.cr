@@ -12,7 +12,7 @@ require "compiler/crystal/syntax"
 # # => "def PLACEHOLDER_1\n  1 + 1\nend"
 # ```
 class Representer
-  @ast : Crystal::ASTNode | String = Crystal::Parser.new("").parse
+  @ast : Crystal::ASTNode = Crystal::Parser.new("").parse
   @solution : String = ""
   @representation : String = ""
 
@@ -61,15 +61,13 @@ class Representer
 
   # Transforms the AST into a representation.
   def represent
-    unless @ast.is_a?(String)
+    unless @representation.empty?
       visitor = TestVisitor_2.new
       visitor.accept(@ast)
       transformed_ast = @ast.transform(Reformat.new(visitor.methods))
       visitor_2 = TestVisitor_2.new
       visitor_2.accept(ast)
       @representation = @ast.transform(TestVisitor.new(visitor_2.counter, visitor_2.debug)).to_s
-    else
-      @representation = @solution
     end
   end
 
@@ -116,14 +114,14 @@ class Representer
     TestVisitor.debug.to_json
   end
 
-  private def parse(content : String) : Crystal::ASTNode | String
+  private def parse(content : String) : Crystal::ASTNode
     begin
       content += "\n"
       parser = Crystal::Parser.new(content)
       parser.parse
     rescue error
       puts error
-      content
+      @representation = content
     end
   end
 end
