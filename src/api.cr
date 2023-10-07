@@ -13,6 +13,7 @@ require "compiler/crystal/syntax"
 # ```
 class Representer
   @ast : Crystal::ASTNode = Crystal::Parser.new("").parse
+  @solution : String = ""
   @representation : String = ""
 
   getter representation : String, ast : Crystal::ASTNode
@@ -27,11 +28,11 @@ class Representer
   # ```
   def parse_folder(folder : Path)
     raise "Can't find #{folder}" unless Dir.exists?(folder)
-    solution = ""
+    @solution = ""
     Dir.open(folder).each_child do |file|
-      solution += File.read(folder / file)
+      @solution += File.read(folder / file)
     end
-    @ast = parse(solution)
+    @ast = parse(@solution)
   end
 
   # Parses a single file by reading it and then parsing it with the Crystal
@@ -44,7 +45,8 @@ class Representer
   # ```
   def parse_file(file : Path)
     raise "Can't find #{file}" unless File.exists?(file)
-    @ast = parse(File.read(file))
+    @solution = File.read(file)
+    @ast = parse(@solution)
   end
 
   # Parses a `String` by parsing it with the Crystal parser.
@@ -59,12 +61,17 @@ class Representer
 
   # Transforms the AST into a representation.
   def represent
+    begin
     visitor = TestVisitor_2.new
     visitor.accept(@ast)
     transformed_ast = @ast.transform(Reformat.new(visitor.methods))
     visitor_2 = TestVisitor_2.new
     visitor_2.accept(ast)
     @representation = @ast.transform(TestVisitor.new(visitor_2.counter, visitor_2.debug)).to_s
+    rescue error
+      puts error
+      @representation = @solution
+    end
   end
 
   # Returns a mapping of the replaced names to the original names.
