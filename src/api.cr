@@ -121,7 +121,7 @@ class Representer
       parser.parse
     rescue error
       puts error
-      @representation = content
+      @representation = @solution
       Crystal::Parser.new("").parse
     end
   end
