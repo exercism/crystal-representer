@@ -61,7 +61,7 @@ class Representer
 
   # Transforms the AST into a representation.
   def represent
-    unless @representation.empty?
+    if @representation.empty?
       visitor = TestVisitor_2.new
       visitor.accept(@ast)
       transformed_ast = @ast.transform(Reformat.new(visitor.methods))
