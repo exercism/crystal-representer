@@ -62,12 +62,12 @@ class Representer
   # Transforms the AST into a representation.
   def represent
     begin
-    visitor = TestVisitor_2.new
-    visitor.accept(@ast)
-    transformed_ast = @ast.transform(Reformat.new(visitor.methods))
-    visitor_2 = TestVisitor_2.new
-    visitor_2.accept(ast)
-    @representation = @ast.transform(TestVisitor.new(visitor_2.counter, visitor_2.debug)).to_s
+      visitor = TestVisitor_2.new
+      visitor.accept(@ast)
+      transformed_ast = @ast.transform(Reformat.new(visitor.methods))
+      visitor_2 = TestVisitor_2.new
+      visitor_2.accept(ast)
+      @representation = @ast.transform(TestVisitor.new(visitor_2.counter, visitor_2.debug)).to_s
     rescue error
       puts error
       @representation = @solution
@@ -118,8 +118,13 @@ class Representer
   end
 
   private def parse(content : String) : Crystal::ASTNode
-    content += "\n"
-    parser = Crystal::Parser.new(content)
-    parser.parse
+    begin
+      content += "\n"
+      parser = Crystal::Parser.new(content)
+      parser.parse
+    rescue error
+      puts error
+      Crystal::Parser.new("").parse
+    end
   end
 end
