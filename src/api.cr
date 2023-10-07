@@ -122,7 +122,7 @@ class Representer
     rescue error
       puts error
       @representation = content
-      Crystal::Parser.new("")
+      Crystal::Parser.new("").parse
     end
   end
 end
