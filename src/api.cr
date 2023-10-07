@@ -116,7 +116,7 @@ class Representer
     TestVisitor.debug.to_json
   end
 
-  private def parse(content : String) : Crystal::ASTNode
+  private def parse(content : String) : Crystal::ASTNode | String
     begin
       content += "\n"
       parser = Crystal::Parser.new(content)
