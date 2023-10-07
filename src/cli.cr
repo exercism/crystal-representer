@@ -7,7 +7,7 @@ options = Hash(Symbol, (String | Bool | Path | Nil)){
   :version_file => false,
 }
 
-bindings = Bindings.new
+representer = Representer.new
 
 OptionParser.parse do |parser|
   parser.banner = "Welcome to The Crystal Representer!"
@@ -24,14 +24,14 @@ OptionParser.parse do |parser|
   parser.on "-f FILE", "--file FILE", "File to parse" do |file|
     puts "Parsing file: #{file}"
     path = Path.new(file)
-    bindings.parse_file(path)
+    representer.parse_file(path)
     puts "Done!"
   end
 
   parser.on "-d DIRECTORY", "--directory DIRECTORY", "Directory to parse" do |directory|
     puts "Parsing directory #{directory}"
     path = Path.new(directory)
-    bindings.parse_folder(path)
+    representer.parse_folder(path)
     puts "Done!"
   end
 
@@ -59,11 +59,11 @@ unless directory.is_a?(Path)
   exit
 end
 
-bindings.represent
-File.write(directory / "mapping.json", bindings.mapping_json)
-File.write(directory / "representation.json", bindings.representation_json)
-File.write(directory / "representation.txt", bindings.representation)
+representer.represent
+File.write(directory / "mapping.json", representer.mapping_json)
+File.write(directory / "representation.json", representer.representation_json)
+File.write(directory / "representation.txt", representer.representation)
 
 if options[:debug]
-  File.write(directory / "debug.json", bindings.debug_json)
+  File.write(directory / "debug.json", representer.debug_json)
 end 
