@@ -5,6 +5,7 @@ options = Hash(Symbol, (String | Bool | Path | Nil)){
   :output       => nil,
   :debug        => false,
   :version_file => false,
+  :specified_files => [] of String
 }
 
 representer = Representer.new
@@ -28,10 +29,20 @@ OptionParser.parse do |parser|
     puts "Done!"
   end
 
+  parser.on "-s ARRAY", "--specify ARRAY", "--specify files" do |files|
+    if files.is_a? String 
+      options[:specified_files] = files[2..-2].split("\",\"")
+    end
+  end 
+
   parser.on "-d DIRECTORY", "--directory DIRECTORY", "Directory to parse" do |directory|
     puts "Parsing directory #{directory}"
     path = Path.new(directory)
-    representer.parse_folder(path)
+    if options[:specified_files].empty?
+      representer.parse_folder(path)
+    else
+      representer.parse_folder(path, options[:specified_files])
+    end
     puts "Done!"
   end
 

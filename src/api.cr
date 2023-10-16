@@ -35,6 +35,27 @@ class Representer
     @ast = parse(@solution)
   end
 
+  # Parses specified files in a folder by grouping them into a single long `String`
+  # and then parsing that `String` with the Crystal parser.
+  #
+  # ```
+  # path = Path.new("path/to/folder")
+  # represent = Representer.new
+  # represent.parse_folder(path, ["main.cr"])
+  # ```
+  def parse_folder(folder : Path, files : Array(String))
+    raise "Can't find #{folder}" unless Dir.exists?(folder)
+    @solution = ""
+    files.each do |file|
+      if File.exists?(folder / file)
+        @solution += File.read(folder / file)
+      else
+       raise "Cant find files"
+      end
+    end
+    @ast = parse(@solution)
+  end
+
   # Parses a single file by reading it and then parsing it with the Crystal
   # parser.
   #
