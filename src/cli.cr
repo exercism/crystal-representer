@@ -56,7 +56,7 @@ directory = options[:output]
 
 unless directory.is_a?(Path)
   puts "No output directory specified"
-  exit
+  exit 0
 end
 
 representer.represent
