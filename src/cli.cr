@@ -38,11 +38,12 @@ OptionParser.parse do |parser|
   parser.on "-d DIRECTORY", "--directory DIRECTORY", "Directory to parse" do |directory|
     puts "Parsing directory #{directory}"
     path = Path.new(directory)
-    if specified_files = options[:specified_files]
+    specified_files = options[:specified_files]
+    if specified_files.is_a?(Array(String))
       if specified_files.empty?
         representer.parse_folder(path)
       else
-        representer.parse_folder(path, options[:specified_files])
+        representer.parse_folder(path, specified_files)
       end
     end
     puts "Done!"
