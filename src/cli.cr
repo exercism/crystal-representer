@@ -1,7 +1,7 @@
 require "option_parser"
 require "./api"
 
-options = Hash(Symbol, (String | Bool | Path | Nil)){
+options = Hash(Symbol, (String | Bool | Path | Nil | Array(String))){
   :output       => nil,
   :debug        => false,
   :version_file => false,
