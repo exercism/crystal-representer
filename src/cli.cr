@@ -31,7 +31,7 @@ OptionParser.parse do |parser|
 
   parser.on "-s ARRAY", "--specify ARRAY", "--specify files" do |files|
     if files.is_a? String 
-      options[:specified_files] = files[2..-2].split("\",\"")
+      options[:specified_files] = files[2...-2].split("\",\"")
     end
   end 
 
@@ -39,7 +39,7 @@ OptionParser.parse do |parser|
     puts "Parsing directory #{directory}"
     path = Path.new(directory)
     specified_files = options[:specified_files]
-    if specified_files.is_a?(Array(String))
+        if specified_files.is_a?(Array(String))
       if specified_files.empty?
         representer.parse_folder(path)
       else
