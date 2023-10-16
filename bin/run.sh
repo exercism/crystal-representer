@@ -30,7 +30,7 @@ mkdir -p "${output_dir}"
 
 echo "${slug}: creating representation..."
 
-./bin/representer -d "${input_dir}/src" -s $solution_files -o "${output_dir}"
+./bin/representer -d "${input_dir}" -s $solution_files -o "${output_dir}"
 
 # As we don't yet analyze the solution files, we'll just concatenate them with
 # leading and trailing empty lines removed
