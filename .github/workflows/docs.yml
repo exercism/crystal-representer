@@ -20,6 +20,6 @@ jobs:
         run: crystal docs --project-name Representer --project-version 1.2.0-Dev
       - name: Deploy docs
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: JamesIves/github-pages-deploy-action@v4
+        uses: JamesIves/github-pages-deploy-action@a1ea191
         with:
           folder: docs # The folder the action should deploy.
