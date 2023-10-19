@@ -24,13 +24,12 @@ fi
 slug="$1"
 input_dir="${2%/}"
 output_dir="${3%/}"
-solution_files="$(jq -c '.files.solution' ${input_dir}/.meta/config.json)"
 # Create the output directory if it doesn't exist
 mkdir -p "${output_dir}"
 
 echo "${slug}: creating representation..."
 
-./bin/representer -s $solution_files -d "${input_dir}" -o "${output_dir}"
+./bin/representer -d "${input_dir}/src" -o "${output_dir}"
 
 # As we don't yet analyze the solution files, we'll just concatenate them with
 # leading and trailing empty lines removed

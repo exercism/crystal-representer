@@ -48,6 +48,7 @@ class Representer
     @solution = ""
     files.each do |file|
       if File.exists?(folder / file)
+        p folder / file
         @solution += File.read(folder / file)
       else
        raise "Cant find files"
