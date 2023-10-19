@@ -1,0 +1,25 @@
+name: Docs
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-22.04
+    container:
+      image: crystallang/crystal
+    steps:
+      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
+      - name: Build docs
+        run: crystal docs --project-name Representer --project-version 1.2.0-Dev
+      - name: Deploy docs
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: JamesIves/github-pages-deploy-action@a1ea191d508feb8485aceba848389d49f80ca2dc
+        with:
+          folder: docs # The folder the action should deploy.

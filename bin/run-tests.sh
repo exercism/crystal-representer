@@ -37,6 +37,7 @@ for test_dir in tests/*; do
         diff "${representation_file_path}" "${expected_representation_file_path}"
 
         if [ $? -ne 0 ]; then
+            echo "error: ${test_dir_name}"
             exit_code=1
         fi
 
@@ -44,6 +45,7 @@ for test_dir in tests/*; do
         diff "${mapping_file_path}" "${expected_mapping_file_path}"
 
         if [ $? -ne 0 ]; then
+            echo "error: ${test_dir_name}"
             exit_code=1
         fi
     fi

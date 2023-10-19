@@ -1,5 +1,0 @@
-{
-  "files": {
-    "solution": ["src/Leap.cr", "src/Helpers.cr"]
-  }
-}
