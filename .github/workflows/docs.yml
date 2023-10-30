@@ -17,7 +17,7 @@ jobs:
         run: |
           apt-get update && apt-get install -y rsync
       - name: Build docs
-        run: crystal docs --project-name Representer --project-version 1.2.0-Dev
+        run: crystal docs --project-name Representer --project-version 1.2.0
       - name: Deploy docs
         uses: JamesIves/github-pages-deploy-action@a1ea191d508feb8485aceba848389d49f80ca2dc
         with:
