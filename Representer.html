@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Crystal Docs 1.9.2">
+<meta name="crystal_docs.project_version" content="1.2.0-Dev">
+<meta name="crystal_docs.project_name" content="Representer">
+
+
+
+<link href="css/style.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="js/doc.js"></script>
+
+  <meta name="repository-name" content="Representer">
+  <title>Representer - Representer 1.2.0-Dev</title>
+  <script type="text/javascript">
+    CrystalDocs.base_path = "";
+  </script>
+</head>
+<body>
+
+<svg class="hidden">
+  <symbol id="octicon-link" viewBox="0 0 16 16">
+    <path fill="currentColor" fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+  </symbol>
+</svg>
+<input type="checkbox" id="sidebar-btn">
+<label for="sidebar-btn" id="sidebar-btn-label">
+  <svg class="open" xmlns="http://www.w3.org/2000/svg" height="2em" width="2em" viewBox="0 0 512 512"><title>Open Sidebar</title><path fill="currentColor" d="M80 96v64h352V96H80zm0 112v64h352v-64H80zm0 112v64h352v-64H80z"></path></svg>
+  <svg class="close" xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 512 512"><title>Close Sidebar</title><path fill="currentColor" d="m118.6 73.4-45.2 45.2L210.7 256 73.4 393.4l45.2 45.2L256 301.3l137.4 137.3 45.2-45.2L301.3 256l137.3-137.4-45.2-45.2L256 210.7Z"></path></svg>
+</label>
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="search-box">
+      <input type="search" class="search-input" placeholder="Search..." spellcheck="false" aria-label="Search">
+    </div>
+
+    <div class="project-summary">
+      <h1 class="project-name">
+        <a href="index.html">
+          Representer
+        </a>
+      </h1>
+
+      <span class="project-version">
+        1.2.0-Dev
+      </span>
+    </div>
+  </div>
+
+  <div class="search-results hidden">
+    <ul class="search-list"></ul>
+  </div>
+
+  <div class="types-list">
+    <ul>
+  
+  <li class=" current" data-id="Representer/Representer" data-name="representer">
+      <a href="Representer.html">Representer</a>
+      
+    </li>
+  
+</ul>
+
+  </div>
+</div>
+
+
+<div class="main-content">
+<h1 class="type-name">
+
+  <span class="kind">class</span> Representer
+
+</h1>
+
+
+  <ul class="superclass-hierarchy"><li class="superclass"><a href="Representer.html">Representer</a></li><li class="superclass">Reference</li><li class="superclass">Object</li></ul>
+
+
+
+
+  <h2>
+    <a id="overview" class="anchor" href="#overview">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Overview
+  </h2>
+
+  <p>Representer allows to be integrated with other programs easilly through its API.</p>
+<pre><code class="language-crystal">represent <span class="o">=</span> <span class="t">Representer</span>.new
+represent.parse_string(<span class="s">&quot;def foo\n  1 + 1\nend&quot;</span>)
+represent.represent
+represent.representation
+<span class="c"># =&gt; &quot;def PLACEHOLDER_1\n  1 + 1\nend&quot;</span></code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2>
+    <a id="defined-in" class="anchor" href="#defined-in">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Defined in:
+  </h2>
+  
+    
+      api.cr
+    
+    <br/>
+  
+
+
+
+
+
+
+
+
+
+  <h2>
+    <a id="instance-method-summary" class="anchor" href="#instance-method-summary">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Summary
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#ast%3ACrystal%3A%3AASTNode-instance-method" class="signature"><strong>#ast</strong> : Crystal::ASTNode</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#debug_json%3AString-instance-method" class="signature"><strong>#debug_json</strong> : String</a>
+        
+          <div class="summary"><p>Returns a json formatted <code>String</code> with the debug information.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#mapping_json%3AString-instance-method" class="signature"><strong>#mapping_json</strong> : String</a>
+        
+          <div class="summary"><p>Returns a mapping of the replaced names to the original names.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#parse_file%28file%3APath%29-instance-method" class="signature"><strong>#parse_file</strong>(file : Path)</a>
+        
+          <div class="summary"><p>Parses a single file by reading it and then parsing it with the Crystal parser.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#parse_folder%28folder%3APath%2Cfiles%3AArray%28String%29%29-instance-method" class="signature"><strong>#parse_folder</strong>(folder : Path, files : Array(String))</a>
+        
+          <div class="summary"><p>Parses specified files in a folder by grouping them into a single long <code>String</code> and then parsing that <code>String</code> with the Crystal parser.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#parse_folder%28folder%3APath%29-instance-method" class="signature"><strong>#parse_folder</strong>(folder : Path)</a>
+        
+          <div class="summary"><p>Parses all files in a folder by grouping them into a single long <code>String</code> and then parsing that <code>String</code> with the Crystal parser.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#parse_string%28content%3AString%29-instance-method" class="signature"><strong>#parse_string</strong>(content : String)</a>
+        
+          <div class="summary"><p>Parses a <code>String</code> by parsing it with the Crystal parser.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#represent-instance-method" class="signature"><strong>#represent</strong></a>
+        
+          <div class="summary"><p>Transforms the AST into a representation.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#representation%3AString-instance-method" class="signature"><strong>#representation</strong> : String</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#representation_json%3AString-instance-method" class="signature"><strong>#representation_json</strong> : String</a>
+        
+          <div class="summary"><p>Returns a version number for the representation format.</p></div>
+        
+      </li>
+    
+  </ul>
+
+
+
+
+
+<div class="methods-inherited">
+  
+    
+
+
+    
+
+
+    
+
+
+  
+    
+
+
+    
+
+
+    
+
+
+  
+</div>
+
+
+
+
+
+
+  <h2>
+    <a id="instance-method-detail" class="anchor" href="#instance-method-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Detail
+  </h2>
+  
+    <div class="entry-detail" id="ast:Crystal::ASTNode-instance-method">
+      <div class="signature">
+        
+        def <strong>ast</strong> : Crystal::ASTNode
+
+        <a class="method-permalink" href="#ast%3ACrystal%3A%3AASTNode-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="debug_json:String-instance-method">
+      <div class="signature">
+        
+        def <strong>debug_json</strong> : String
+
+        <a class="method-permalink" href="#debug_json%3AString-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Returns a json formatted <code>String</code> with the debug information.</p>
+<pre><code class="language-crystal">represent <span class="o">=</span> <span class="t">Representer</span>.new
+represent.parse_string(<span class="s">&quot;def foo\n  1 + 1\nend&quot;</span>)
+represent.represent
+represent.debug_json
+<span class="c"># =&gt; &quot;[[&quot;PLACEHOLDER_1&quot;, &quot;Crystal::Def&quot;]]&quot;</span></code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="mapping_json:String-instance-method">
+      <div class="signature">
+        
+        def <strong>mapping_json</strong> : String
+
+        <a class="method-permalink" href="#mapping_json%3AString-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Returns a mapping of the replaced names to the original names.
+The format returned is a json formatted <code>String</code>.</p>
+<pre><code class="language-crystal">represent <span class="o">=</span> <span class="t">Representer</span>.new
+represent.parse_string(<span class="s">&quot;def foo\n  1 + 1\nend&quot;</span>)
+represent.represent
+represent.mapping
+<span class="c"># =&gt; &quot;{\&quot;PLACEHOLDER_1\&quot;:\&quot;foo\&quot;}&quot;</span></code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="parse_file(file:Path)-instance-method">
+      <div class="signature">
+        
+        def <strong>parse_file</strong>(file : Path)
+
+        <a class="method-permalink" href="#parse_file%28file%3APath%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Parses a single file by reading it and then parsing it with the Crystal
+parser.</p>
+<pre><code class="language-crystal">path <span class="o">=</span> <span class="t">Path</span>.new(<span class="s">&quot;path/to/file&quot;</span>)
+represent <span class="o">=</span> <span class="t">Representer</span>.new
+represent.parse_file(path)</code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="parse_folder(folder:Path,files:Array(String))-instance-method">
+      <div class="signature">
+        
+        def <strong>parse_folder</strong>(folder : Path, files : Array(String))
+
+        <a class="method-permalink" href="#parse_folder%28folder%3APath%2Cfiles%3AArray%28String%29%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Parses specified files in a folder by grouping them into a single long <code>String</code>
+and then parsing that <code>String</code> with the Crystal parser.</p>
+<pre><code class="language-crystal">path <span class="o">=</span> <span class="t">Path</span>.new(<span class="s">&quot;path/to/folder&quot;</span>)
+represent <span class="o">=</span> <span class="t">Representer</span>.new
+represent.parse_folder(path, [<span class="s">&quot;main.cr&quot;</span>])</code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="parse_folder(folder:Path)-instance-method">
+      <div class="signature">
+        
+        def <strong>parse_folder</strong>(folder : Path)
+
+        <a class="method-permalink" href="#parse_folder%28folder%3APath%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Parses all files in a folder by grouping them into a single long <code>String</code>
+and then parsing that <code>String</code> with the Crystal parser.</p>
+<pre><code class="language-crystal">path <span class="o">=</span> <span class="t">Path</span>.new(<span class="s">&quot;path/to/folder&quot;</span>)
+represent <span class="o">=</span> <span class="t">Representer</span>.new
+represent.parse_folder(path)</code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="parse_string(content:String)-instance-method">
+      <div class="signature">
+        
+        def <strong>parse_string</strong>(content : String)
+
+        <a class="method-permalink" href="#parse_string%28content%3AString%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Parses a <code>String</code> by parsing it with the Crystal parser.</p>
+<pre><code class="language-crystal">represent <span class="o">=</span> <span class="t">Representer</span>.new
+represent.parse_string(<span class="s">&quot;def foo\n  1 + 1\nend&quot;</span>)</code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="represent-instance-method">
+      <div class="signature">
+        
+        def <strong>represent</strong>
+
+        <a class="method-permalink" href="#represent-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Transforms the AST into a representation.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="representation:String-instance-method">
+      <div class="signature">
+        
+        def <strong>representation</strong> : String
+
+        <a class="method-permalink" href="#representation%3AString-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="representation_json:String-instance-method">
+      <div class="signature">
+        
+        def <strong>representation_json</strong> : String
+
+        <a class="method-permalink" href="#representation_json%3AString-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Returns a version number for the representation format.
+The format returned is a json formatted <code>String</code>.</p>
+<pre><code class="language-crystal">represent <span class="o">=</span> <span class="t">Representer</span>.new
+represent.parse_string(<span class="s">&quot;def foo\n  1 + 1\nend&quot;</span>)
+represent.represent
+represent.representation_json
+<span class="c"># =&gt; &quot;{\&quot;version\&quot;:1}&quot;</span></code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+
+
+
+
+</div>
+
+</body>
+</html>
