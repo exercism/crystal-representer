@@ -136,6 +136,23 @@ class Representer
     TestVisitor.debug.to_json
   end
 
+  # Allows changing the value of the data variable which is what is
+  # holding all names when representation.
+  # When wanting to represent brand new code, this variable has to be cleared
+  #
+  # Example:
+  # ```
+  # represent = Representer.new
+  # represent.parse_string("def foo\n  1 + 1\nend")
+  # represent.represent
+  # represent.update_data([] of String)
+  # represent.parse_string("def foo\n  1 + 1\nend")
+  # represent.represent
+  # ```
+  def update_data(new_data : Array(String))
+    TestVisitor.data = new_data
+  end
+
   private def parse(content : String) : Crystal::ASTNode
     begin
       content += "\n"

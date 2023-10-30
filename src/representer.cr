@@ -15,6 +15,10 @@ class TestVisitor < Crystal::Transformer
     @@data
   end
 
+  def self.data=(new_data : Array(String))
+    @@data = new_data
+  end
+
   def initialize(data = [] of String, debug = [] of Tuple(String, String))
     @@debug += debug
     @@data += data

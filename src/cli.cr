@@ -74,6 +74,7 @@ unless directory.is_a?(Path)
 end
 
 representer.represent
+
 File.write(directory / "mapping.json", representer.mapping_json)
 File.write(directory / "representation.json", representer.representation_json)
 File.write(directory / "representation.txt", representer.representation)
@@ -81,3 +82,5 @@ File.write(directory / "representation.txt", representer.representation)
 if options[:debug]
   File.write(directory / "debug.json", representer.debug_json)
 end 
+
+representer.update_data([] of String)
