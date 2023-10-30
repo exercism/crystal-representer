@@ -1,3 +1,7 @@
+# 1.2.1
+
+- Fix github pages
+
 # 1.2.0
 
 ## Improvements

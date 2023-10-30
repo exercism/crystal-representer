@@ -1,12 +1,8 @@
 name: Docs
+on: [push]
 
-on:
-  pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - main
+permissions:
+  contents: write
 
 jobs:
   deploy:
@@ -15,11 +11,16 @@ jobs:
     container:
       image: crystallang/crystal
     steps:
-      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+      - name: Install rsync 📚
+        run: |
+          apt-get update && apt-get install -y rsync
       - name: Build docs
         run: crystal docs --project-name Representer --project-version 1.2.0-Dev
       - name: Deploy docs
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: JamesIves/github-pages-deploy-action@a1ea191d508feb8485aceba848389d49f80ca2dc
         with:
+          branch: gh-pages
           folder: docs # The folder the action should deploy.
+          clean: true
