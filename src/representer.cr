@@ -19,6 +19,10 @@ class TestVisitor < Crystal::Transformer
     @@data = new_data
   end
 
+  def self.counter=(new_counter : Int32)
+    @@counter = new_counter
+  end
+
   def initialize(data = [] of String, debug = [] of Tuple(String, String))
     @@debug += debug
     @@data += data

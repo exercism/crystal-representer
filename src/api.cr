@@ -146,11 +146,30 @@ class Representer
   # represent.parse_string("def foo\n  1 + 1\nend")
   # represent.represent
   # represent.update_data([] of String)
+  # represent.update_counter
   # represent.parse_string("def foo\n  1 + 1\nend")
   # represent.represent
   # ```
   def update_data(new_data : Array(String))
     TestVisitor.data = new_data
+  end
+
+  # Allows changing the value of the counter which is which number of the placeholder item gets.
+  # When wanting to represent brand new code, this variable has to be changed to one.
+  # When the method is called without any argumments will it defualt to one.
+  #
+  # Example:
+  # ```
+  # represent = Representer.new
+  # represent.parse_string("def foo\n  1 + 1\nend")
+  # represent.represent
+  # represent.update_data([] of String)
+  # represent.update_counter(1)
+  # represent.parse_string("def foo\n  1 + 1\nend")
+  # represent.represent
+  # ```
+  def update_counter(new_counter : Int32 = 1)
+    TestVisitor.counter = new_counter
   end
 
   private def parse(content : String) : Crystal::ASTNode

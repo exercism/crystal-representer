@@ -84,3 +84,4 @@ if options[:debug]
 end 
 
 representer.update_data([] of String)
+representer.update_counter()
