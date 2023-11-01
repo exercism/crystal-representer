@@ -210,6 +210,13 @@ represent.representation
       </li>
     
       <li class="entry-summary">
+        <a href="#update_counter%28new_counter%3AInt32%3D1%29-instance-method" class="signature"><strong>#update_counter</strong>(new_counter : Int32 = <span class="n">1</span>)</a>
+        
+          <div class="summary"><p>Allows changing the value of the counter which is which number of the placeholder item gets.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
         <a href="#update_data%28new_data%3AArray%28String%29%29-instance-method" class="signature"><strong>#update_data</strong>(new_data : Array(String))</a>
         
           <div class="summary"><p>Allows changing the value of the data variable which is what is holding all names when representation.</p></div>
@@ -471,6 +478,35 @@ represent.representation_json
       </div>
     </div>
   
+    <div class="entry-detail" id="update_counter(new_counter:Int32=1)-instance-method">
+      <div class="signature">
+        
+        def <strong>update_counter</strong>(new_counter : Int32 = <span class="n">1</span>)
+
+        <a class="method-permalink" href="#update_counter%28new_counter%3AInt32%3D1%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Allows changing the value of the counter which is which number of the placeholder item gets.
+When wanting to represent brand new code, this variable has to be changed to one.
+When the method is called without any argumments will it defualt to one.</p>
+<p>Example:</p>
+<pre><code class="language-crystal">represent <span class="o">=</span> <span class="t">Representer</span>.new
+represent.parse_string(<span class="s">&quot;def foo\n  1 + 1\nend&quot;</span>)
+represent.represent
+represent.update_data(<span class="o">[]</span> <span class="k">of</span> <span class="t">String</span>)
+represent.update_counter(<span class="n">1</span>)
+represent.parse_string(<span class="s">&quot;def foo\n  1 + 1\nend&quot;</span>)
+represent.represent</code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
     <div class="entry-detail" id="update_data(new_data:Array(String))-instance-method">
       <div class="signature">
         
@@ -489,6 +525,7 @@ When wanting to represent brand new code, this variable has to be cleared</p>
 represent.parse_string(<span class="s">&quot;def foo\n  1 + 1\nend&quot;</span>)
 represent.represent
 represent.update_data(<span class="o">[]</span> <span class="k">of</span> <span class="t">String</span>)
+represent.update_counter
 represent.parse_string(<span class="s">&quot;def foo\n  1 + 1\nend&quot;</span>)
 represent.represent</code></pre>
         </div>
