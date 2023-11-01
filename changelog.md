@@ -1,3 +1,9 @@
+# 1.2.1
+
+- Fix github pages
+- Clear class data when representation is done
+- Add method which allows clearing of data
+
 # 1.2.0
 
 ## Improvements
