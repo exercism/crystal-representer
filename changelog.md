@@ -1,7 +1,8 @@
 # 1.3.0
 
 - Bump Crystal to 1.11
-- Add description to shard
+- Add description to shard.
+- Added gc-dev dependencies
 
 # 1.2.1
 
