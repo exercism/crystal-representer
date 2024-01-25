@@ -1,4 +1,4 @@
-FROM crystallang/crystal:1.10.1-alpine as Builder
+FROM crystallang/crystal:1.11.2-alpine as Builder
 
 # install packages required to run the representer
 COPY . .
@@ -9,7 +9,7 @@ RUN ./bin/build.sh
 
 FROM alpine:3.17
 
-RUN apk add --update --no-cache --force-overwrite pcre-dev pcre2-dev bash jq coreutils  
+RUN apk add --update --no-cache --force-overwrite pcre-dev pcre2-dev bash jq coreutils gc-dev   
 WORKDIR /opt/representer
 
 COPY . .
