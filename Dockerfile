@@ -1,4 +1,4 @@
-FROM crystallang/crystal:1.11.2-alpine as Builder
+FROM crystallang/crystal:1.12.1-alpine as Builder
 
 # install packages required to run the representer
 COPY . .
