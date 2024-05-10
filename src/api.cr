@@ -29,7 +29,7 @@ class Representer
   def parse_folder(folder : Path)
     raise "Can't find #{folder}" unless Dir.exists?(folder)
     @solution = ""
-    Dir.open(folder).each_child do |file|
+    Dir.open(folder).children.sort.each do |file|
       @solution += File.read(folder / file)
     end
     @ast = parse(@solution)
