@@ -9,7 +9,7 @@ RUN ./bin/build.sh
 
 FROM alpine:3.20
 
-RUN apk add --update --no-cache --force-overwrite pcre-dev pcre2-dev bash jq coreutils gc-dev   
+RUN apk add --update --no-cache --force-overwrite pcre2-dev bash jq coreutils gc-dev   
 WORKDIR /opt/representer
 
 COPY . .
