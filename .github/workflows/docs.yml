@@ -22,7 +22,7 @@ jobs:
       - name: Build docs
         run: crystal docs --project-name Representer --project-version 1.2.0
       - name: Deploy docs
-        uses: JamesIves/github-pages-deploy-action@ec9c88baef04b842ca6f0a132fd61c762aa6c1b0
+        uses: JamesIves/github-pages-deploy-action@881db5376404c5c8d621010bcbec0310b58d5e29
         with:
           branch: gh-pages
           folder: docs # The folder the action should deploy.
