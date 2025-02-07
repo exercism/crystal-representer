@@ -1,3 +1,7 @@
+# 1.3.4
+
+- Bump Crystal to 1.15
+
 # 1.3.3
 
 - Bump Crystal to 1.14
