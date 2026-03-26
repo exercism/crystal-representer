@@ -1,3 +1,8 @@
+# 1.3.5
+
+- Bump to Crystal 1.19
+- Bump alpine to 3.22 to match the version Crystal use
+
 # 1.3.4
 
 - Bump Crystal to 1.15
